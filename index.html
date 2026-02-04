@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="eManzil — Manzil verses as offline flashcards." />
+  <title>eManzil</title>
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.09);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.68);
+      --line: rgba(255,255,255,0.12);
+      --btn: rgba(255,255,255,0.10);
+      --btn2: rgba(255,255,255,0.16);
+      --accent: #8ab4ff;
+      --danger: #ff7b7b;
+      --shadow: 0 18px 60px rgba(0,0,0,0.35);
+      --radius: 22px;
+    }
+
+    [data-theme="light"]{
+      --bg: #f5f7fb;
+      --card: rgba(0,0,0,0.04);
+      --card2: rgba(0,0,0,0.06);
+      --text: rgba(0,0,0,0.88);
+      --muted: rgba(0,0,0,0.62);
+      --line: rgba(0,0,0,0.10);
+      --btn: rgba(0,0,0,0.05);
+      --btn2: rgba(0,0,0,0.09);
+      --accent: #2b5cff;
+      --danger: #c92b2b;
+      --shadow: 0 18px 60px rgba(10,20,40,0.12);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(138,180,255,0.18), transparent 60%),
+                  radial-gradient(900px 500px at 85% 20%, rgba(140,255,200,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 16px 28px;
+    }
+
+    header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .logo{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(138,180,255,0.45), rgba(255,255,255,0.08));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .title{
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .title strong{ font-size: 16px; }
+    .title span{ font-size: 12px; color: var(--muted); }
+
+    .toolbar{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--btn);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s ease, background 0.2s ease;
+    }
+    .pill:hover{ background: var(--btn2); }
+    .pill:active{ transform: translateY(1px); }
+
+    select.pill{
+      padding-right: 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--card), transparent 120%);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before{
+      content: "";
+      position: absolute;
+      inset: -120px -120px auto auto;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(138,180,255,0.20), transparent 65%);
+      transform: rotate(10deg);
+      pointer-events: none;
+    }
+
+    .meta{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .ref{
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .progress{
+      font-size: 13px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar{
+      width: 160px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    [data-theme="light"] .bar{ background: rgba(0,0,0,0.04); }
+
+    .bar > i{
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(138,180,255,0.75), rgba(140,255,200,0.55));
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .ayah{
+      text-align: center;
+      padding: 6px 6px 0;
+    }
+
+    .arabic{
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.8;
+      letter-spacing: 0.2px;
+      margin: 10px 0 12px;
+      font-family: "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif;
+    }
+
+    .translation{
+      max-width: 860px;
+      margin: 0 auto;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text);
+      opacity: 0.92;
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+      text-align: left;
+    }
+
+    .translation.hidden{ display: none; }
+
+    .hint{
+      text-align: center;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .controls{
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn{
+      border: 1px solid var(--line);
+      background: var(--btn);
+      color: var(--text);
+      padding: 12px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.08s ease, background 0.2s ease;
+    }
+    .btn:hover{ background: var(--btn2); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: rgba(138,180,255,0.18);
+      border-color: rgba(138,180,255,0.35);
+    }
+
+    .btn.danger{
+      background: rgba(255,123,123,0.12);
+      border-color: rgba(255,123,123,0.22);
+      color: var(--text);
+    }
+
+    .row{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      color: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      display: none;
+      max-width: min(92vw, 620px);
+      text-align: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    [data-theme="light"] .toast{
+      background: rgba(255,255,255,0.92);
+      color: rgba(0,0,0,0.80);
+      border-color: rgba(0,0,0,0.10);
+    }
+
+    .toast.show{ display: block; }
+
+    .swipeZone{ touch-action: pan-y; }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo">م</div>
+        <div class="title">
+          <strong>eManzil</strong>
+          <span>Manzil verses • flashcards • offline</span>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <select id="lang" class="pill" aria-label="Translation language">
+          <option value="en">English</option>
+          <option value="ms">Malay</option>
+        </select>
+
+        <button class="pill" id="toggleTrans" title="Show/Hide translation">🃏 Flashcard</button>
+        <button class="pill" id="theme" title="Toggle dark mode">🌙</button>
+        <button class="pill" id="install" style="display:none" title="Install eManzil">⬇️ Install</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card swipeZone" id="card">
+        <div class="meta">
+          <div class="ref" id="ref">Loading…</div>
+          <div class="progress">
+            <span id="idx">—</span>
+            <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+          </div>
+        </div>
+
+        <div class="ayah" id="ayah">
+          <div class="arabic" id="arabic">…</div>
+          <div class="translation" id="translation">…</div>
+          <div class="hint">Swipe ← / → or use buttons • Tap verse to toggle translation</div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="prev">← Prev</button>
+          <button class="btn primary" id="random">🔀 Random</button>
+          <button class="btn" id="next">Next →</button>
+        </div>
+
+        <div class="row">
+          <div class="small" id="offline">Offline: checking…</div>
+          <button class="btn danger" id="reset">Reset</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // eManzil loads verses from: ./data/manzil.json
+  // Format:
+  // [
+  //   { "surah":"Al-Fatihah", "ayah":1, "arabic":"...", "en":"...", "ms":"..." }
+  // ]
+
+  const LS = {
+    theme: "emanzi_theme",
+    lang: "emanzi_lang",
+    idx: "emanzi_idx",
+    hideTrans: "emanzi_hide_translation"
+  };
+
+  const state = {
+    idx: 0,
+    lang: "en",
+    theme: "dark",
+    hideTranslation: false,
+    data: []
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  const el = {
+    lang: $("lang"),
+    theme: $("theme"),
+    install: $("install"),
+    toggleTrans: $("toggleTrans"),
+
+    ref: $("ref"),
+    idx: $("idx"),
+    bar: $("bar"),
+    arabic: $("arabic"),
+    translation: $("translation"),
+    offline: $("offline"),
+
+    prev: $("prev"),
+    next: $("next"),
+    random: $("random"),
+    reset: $("reset"),
+
+    card: $("card"),
+    ayah: $("ayah"),
+    toast: $("toast")
+  };
+
+  function clampIndex(i){
+    const n = state.data.length;
+    if(n === 0) return 0;
+    return (i % n + n) % n;
+  }
+
+  function save(){
+    localStorage.setItem(LS.theme, state.theme);
+    localStorage.setItem(LS.lang, state.lang);
+    localStorage.setItem(LS.idx, String(state.idx));
+    localStorage.setItem(LS.hideTrans, state.hideTranslation ? "1" : "0");
+  }
+
+  function load(){
+    const theme = localStorage.getItem(LS.theme);
+    const lang = localStorage.getItem(LS.lang);
+    const idx = localStorage.getItem(LS.idx);
+    const hide = localStorage.getItem(LS.hideTrans);
+
+    if(theme === "light" || theme === "dark") state.theme = theme;
+    if(lang === "en" || lang === "ms") state.lang = lang;
+    if(idx !== null && !Number.isNaN(Number(idx))) state.idx = Number(idx);
+    if(hide === "1" || hide === "0") state.hideTranslation = hide === "1";
+  }
+
+  function toast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.toast.classList.remove("show"), 1600);
+  }
+
+  function setTheme(theme){
+    state.theme = theme;
+    document.documentElement.setAttribute("data-theme", theme);
+    el.theme.textContent = theme === "dark" ? "🌙" : "☀️";
+    save();
+  }
+
+  function setLang(lang){
+    state.lang = lang;
+    el.lang.value = lang;
+    save();
+    render();
+  }
+
+  function setHideTranslation(v){
+    state.hideTranslation = v;
+    el.translation.classList.toggle("hidden", v);
+    el.toggleTrans.textContent = v ? "🃏 Flashcard" : "📖 Reading";
+    save();
+  }
+
+  function go(i){
+    state.idx = clampIndex(i);
+    save();
+    render();
+  }
+
+  function render(){
+    if(!state.data.length){
+      el.ref.textContent = "No verses loaded";
+      el.arabic.textContent = "—";
+      el.translation.textContent = "Put your verses into data/manzil.json";
+      el.idx.textContent = "—";
+      el.bar.style.width = "0%";
+      return;
+    }
+
+    state.idx = clampIndex(state.idx);
+    const item = state.data[state.idx];
+
+    el.ref.textContent = `${item.surah} • Ayah ${item.ayah}`;
+    el.arabic.textContent = item.arabic;
+
+    const t = state.lang === "ms" ? item.ms : item.en;
+    el.translation.textContent = t || "(Translation missing)";
+
+    el.idx.textContent = `${state.idx + 1} / ${state.data.length}`;
+    el.bar.style.width = `${((state.idx + 1) / state.data.length) * 100}%`;
+
+    el.translation.classList.toggle("hidden", state.hideTranslation);
+  }
+
+  // Swipe support
+  let startX = 0;
+  let startY = 0;
+  let swiping = false;
+
+  function onTouchStart(e){
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    swiping = true;
+  }
+
+  function onTouchMove(e){
+    if(!swiping) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if(Math.abs(dy) > Math.abs(dx)) return;
+    e.preventDefault();
+  }
+
+  function onTouchEnd(e){
+    if(!swiping) return;
+    swiping = false;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+
+    if(Math.abs(dx) < 45) return;
+    if(dx < 0) go(state.idx + 1);
+    else go(state.idx - 1);
+  }
+
+  // Offline + PWA
+  async function registerSW(){
+    if(!("serviceWorker" in navigator)) return;
+    try{
+      const reg = await navigator.serviceWorker.register("sw.js");
+      setOfflineLabel();
+      reg.addEventListener("updatefound", () => {
+        toast("Update found. Reload after it installs.");
+      });
+    }catch(err){
+      console.warn("SW registration failed", err);
+    }
+  }
+
+  function setOfflineLabel(){
+    const online = navigator.onLine;
+    el.offline.textContent = online ? "Offline: available after first load" : "Offline: you are offline";
+  }
+
+  window.addEventListener("online", setOfflineLabel);
+  window.addEventListener("offline", setOfflineLabel);
+
+  // Install prompt
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    el.install.style.display = "inline-flex";
+  });
+
+  el.install.addEventListener("click", async () => {
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const res = await deferredPrompt.userChoice;
+    if(res?.outcome === "accepted") toast("Installed ✨");
+    deferredPrompt = null;
+    el.install.style.display = "none";
+  });
+
+  // Load data
+  async function loadData(){
+    try{
+      const res = await fetch("./data/manzil.json", { cache: "no-store" });
+      if(!res.ok) throw new Error("Failed to load manzil.json");
+      const json = await res.json();
+      if(!Array.isArray(json)) throw new Error("manzil.json must be an array");
+      state.data = json;
+      render();
+      toast("Loaded verses");
+    }catch(err){
+      console.warn(err);
+      state.data = [];
+      render();
+      toast("Could not load data/manzil.json");
+    }
+  }
+
+  // Events
+  el.prev.addEventListener("click", () => go(state.idx - 1));
+  el.next.addEventListener("click", () => go(state.idx + 1));
+
+  el.random.addEventListener("click", () => {
+    if(!state.data.length) return;
+    const i = Math.floor(Math.random() * state.data.length);
+    go(i);
+    toast("Random verse");
+  });
+
+  el.reset.addEventListener("click", () => {
+    if(!confirm("Reset progress + settings?")) return;
+    localStorage.removeItem(LS.theme);
+    localStorage.removeItem(LS.lang);
+    localStorage.removeItem(LS.idx);
+    localStorage.removeItem(LS.hideTrans);
+    location.reload();
+  });
+
+  el.lang.addEventListener("change", (e) => setLang(e.target.value));
+
+  el.theme.addEventListener("click", () => {
+    setTheme(state.theme === "dark" ? "light" : "dark");
+  });
+
+  el.toggleTrans.addEventListener("click", () => {
+    setHideTranslation(!state.hideTranslation);
+  });
+
+  el.ayah.addEventListener("click", () => setHideTranslation(!state.hideTranslation));
+
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "ArrowLeft") go(state.idx - 1);
+    if(e.key === "ArrowRight") go(state.idx + 1);
+    if(e.key.toLowerCase() === "t") setHideTranslation(!state.hideTranslation);
+  });
+
+  el.card.addEventListener("touchstart", onTouchStart, {passive: true});
+  el.card.addEventListener("touchmove", onTouchMove, {passive: false});
+  el.card.addEventListener("touchend", onTouchEnd, {passive: true});
+
+  // Boot
+  (function init(){
+    load();
+    setTheme(state.theme);
+    setLang(state.lang);
+    setHideTranslation(state.hideTranslation);
+    setOfflineLabel();
+    registerSW();
+    loadData().then(() => {
+      // after data loaded, restore idx with clamp
+      const idx = localStorage.getItem(LS.idx);
+      if(idx !== null && !Number.isNaN(Number(idx))) state.idx = clampIndex(Number(idx));
+      render();
+    });
+  })();
+</script>
+</body>
+</html>
